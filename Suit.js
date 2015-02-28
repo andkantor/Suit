@@ -1,10 +1,15 @@
-var Suit;
-
 (function (window) {
     var document = window.document;
-    var index, key, prop, object, suitClass, dependencies;
+    var index, key, prop, suitClass, dependencies;
 
-    Suit = {
+    window.Function.prototype.suitConstruct = function (args) {
+        var self = this,
+            func = function () { self.apply(this, args); };
+        func.prototype = self.prototype;
+        return new func();
+    };
+
+    window.Suit = {
         bind: function (obj, event, fn) {
             if (obj.addEventListener) {
                 obj.addEventListener(event, fn, false);
@@ -27,9 +32,7 @@ var Suit;
         up: function (element, classString) {
             suitClass = Suit.classify(classString);
 
-            if (suitClass === undefined) {
-                console.log('Undefined class: ' + classString);
-            } else {
+            if (suitClass !== undefined) {
                 Suit.copy(element, Suit.factory(suitClass));
             }
         },
@@ -46,27 +49,13 @@ var Suit;
             );
         },
         copy: function(destination, source) {
-            if (source.prototype) {
-                Suit.copy(destination, source.prototype);
-            }
-
             for (prop in source) {
-                if (prop !== 'prototype' && source[prop] != null) {
-                    if (
-                        source[prop]
-                        && source[prop].constructor
-                        && source[prop].constructor === Object
-                    ) {
-                        destination[prop] = destination[prop] || source[prop];
-                        Suit.copy(destination[prop], source[prop]);
-                    } else {
-                        destination[prop] = source[prop];
-                    }
+                if (source[prop] != null) {
+                    destination[prop] = source[prop];
                 }
             }
         },
         factory: function (suitClass) {
-            object = {};
             dependencies = [];
 
             if (suitClass.hasOwnProperty('dependencies')) {
@@ -79,10 +68,7 @@ var Suit;
                 });
             }
 
-            suitClass.apply(object, dependencies);
-            object.prototype = suitClass.prototype;
-
-            return object;
+            return suitClass.suitConstruct(dependencies);
         }
     };
 
