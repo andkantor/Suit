@@ -11,13 +11,13 @@ specify an attribute on your HTML element and Suit will do the rest.
 Browser Support
 ---------------
 
-IE 9, Firefox 4, Chrome 4, Safari 3.1, Opera 10.1
+IE 9, Firefox 4, Chrome 4, Safari 3.1, Opera 10.1,
 iOS Safari 3.2, Opera Mini 8, Android 2.1
 
 Manual
 ------
 
-Here is our first div. We have set the suit attribute on it, with the
+Here is our first div. We have set the suit attribute on it with the
 function's global name we want to extend with.
 
 ```html

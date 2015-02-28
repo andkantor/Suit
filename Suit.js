@@ -10,6 +10,15 @@
     };
 
     window.Suit = {
+        DI: {
+            services: {},
+            get: function (id) {
+                return this.services[id];
+            },
+            set: function (id, service) {
+                this.services[id] = service;
+            }
+        },
         bind: function (obj, event, fn) {
             if (obj.addEventListener) {
                 obj.addEventListener(event, fn, false);
@@ -76,16 +85,6 @@
         },
         toId: function (str) {
             return str.substring(1, str.length);
-        }
-    };
-
-    Suit.DI = {
-        services: {},
-        get: function (id) {
-            return this.services[id];
-        },
-        set: function (id, service) {
-            this.services[id] = service;
         }
     };
 
