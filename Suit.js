@@ -1,6 +1,6 @@
 (function (window) {
     var document = window.document;
-    var index, key, prop, suitClass, dependencies;
+    var index, key, prop, dependencies;
 
     window.Function.prototype.suitConstruct = function (args) {
         var self = this,
@@ -29,12 +29,14 @@
                 }
             }
         },
-        up: function (element, classString) {
-            suitClass = Suit.classify(classString);
+        up: function (element, suits) {
+            Suit.each(suits.split(';'), function (i, suitClass) {
+                suitClass = Suit.classify(suitClass);
 
-            if (suitClass !== undefined) {
-                Suit.copy(element, Suit.factory(suitClass));
-            }
+                if (suitClass !== undefined) {
+                    Suit.copy(element, Suit.factory(suitClass));
+                }
+            });
         },
         classify: function (classString, namespace) {
             namespace = namespace || window;
@@ -61,7 +63,9 @@
             if (suitClass.hasOwnProperty('dependencies')) {
                 Suit.each(suitClass.dependencies, function (i, dependency) {
                     if (dependency.indexOf('#') === 0) {
-                        dependencies.push(document.getElementById(dependency.substring(1, dependency.length)));
+                        dependencies.push(document.getElementById(Suit.toId(dependency)));
+                    } else if (dependency.indexOf('@') === 0) {
+                        dependencies.push(Suit.DI.get(Suit.toId(dependency)));
                     } else {
                         dependencies.push(Suit.classify(dependency));
                     }
@@ -69,12 +73,25 @@
             }
 
             return suitClass.suitConstruct(dependencies);
+        },
+        toId: function (str) {
+            return str.substring(1, str.length);
+        }
+    };
+
+    Suit.DI = {
+        services: {},
+        get: function (id) {
+            return this.services[id];
+        },
+        set: function (id, service) {
+            this.services[id] = service;
         }
     };
 
     Suit.bind(document, 'DOMContentLoaded', function () {
-        Suit.each(document.querySelectorAll('[suit-class]'), function (i, element) {
-            Suit.up(element, element.getAttribute('suit-class'));
+        Suit.each(document.querySelectorAll('[suit]'), function (i, element) {
+            Suit.up(element, element.getAttribute('suit'));
         });
     });
 })(window);
