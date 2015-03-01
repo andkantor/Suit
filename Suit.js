@@ -1,24 +1,8 @@
 (function (window) {
-    var document = window.document;
-    var index, key, prop, dependencies;
-
-    window.Function.prototype.suitConstruct = function (args) {
-        var self = this,
-            func = function () { self.apply(this, args); };
-        func.prototype = self.prototype;
-        return new func();
-    };
+    var index, key, dependencies, dep, func,
+        document = window.document;
 
     window.Suit = {
-        DI: {
-            services: {},
-            get: function (id) {
-                return this.services[id];
-            },
-            set: function (id, service) {
-                this.services[id] = service;
-            }
-        },
         bind: function (obj, event, fn) {
             if (obj.addEventListener) {
                 obj.addEventListener(event, fn, false);
@@ -39,11 +23,11 @@
             }
         },
         up: function (element, suits) {
-            Suit.each(suits.split(';'), function (i, suitClass) {
+            this.each(suits.split(';'), function (i, suitClass) {
                 suitClass = Suit.classify(suitClass);
 
                 if (suitClass !== undefined) {
-                    Suit.copy(element, Suit.factory(suitClass));
+                    Suit.copy(Suit.build(suitClass), element);
                 }
             });
         },
@@ -54,37 +38,63 @@
                 return namespace[classString];
             }
 
-            return Suit.classify(
+            return this.classify(
                 classString.substring(index + 1, classString.length),
                 namespace[classString.substring(0, index)]
             );
         },
-        copy: function(destination, source) {
-            for (prop in source) {
-                if (source[prop] != null) {
-                    destination[prop] = source[prop];
+        copy: function(from, to) {
+            for (key in from) {
+                if (from[key] != null) {
+                    to[key] = from[key];
                 }
             }
         },
-        factory: function (suitClass) {
+        build: function (suitClass) {
             dependencies = [];
 
             if (suitClass.hasOwnProperty('dependencies')) {
-                Suit.each(suitClass.dependencies, function (i, dependency) {
-                    if (dependency.indexOf('#') === 0) {
-                        dependencies.push(document.getElementById(Suit.toId(dependency)));
-                    } else if (dependency.indexOf('@') === 0) {
-                        dependencies.push(Suit.DI.get(Suit.toId(dependency)));
-                    } else {
-                        dependencies.push(Suit.classify(dependency));
-                    }
+                this.each(suitClass.dependencies, function (i, dependency) {
+                    dependencies.push(Suit.DI.lookUp(dependency));
                 });
             }
 
-            return suitClass.suitConstruct(dependencies);
+            return this.create(suitClass, dependencies);
         },
-        toId: function (str) {
-            return str.substring(1, str.length);
+        create: function (suitClass, dependencies) {
+            func = function () { suitClass.apply(this, dependencies); };
+            func.prototype = suitClass.prototype;
+            return new func();
+        },
+        DI: {
+            services: {},
+            get: function (id) {
+                return this.services[id];
+            },
+            set: function (id, service) {
+                this.services[id] = service;
+            },
+            lookUp: function (dependency) {
+                if (typeof dependency === 'string') {
+                    if (dep = this.toGlobal(dependency)) {
+                        return Suit.classify(dep);
+                    } else if (dep = this.toService(dependency)) {
+                        return this.get(dep);
+                    }
+                }
+
+                return dependency;
+            },
+            toGlobal: function (str) {
+                return str.indexOf('{') === 0 && str.indexOf('}') === str.length - 1
+                    ? str.substring(1, str.length - 1)
+                    : '';
+            },
+            toService: function (str) {
+                return str.indexOf('@') === 0
+                    ? str.substring(1, str.length)
+                    : '';
+            }
         }
     };
 

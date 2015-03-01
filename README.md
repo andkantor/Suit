@@ -50,16 +50,16 @@ You can set more suits in one element by separating them with semicolon. If
 two suits have property with the same name, then the second will overwrite
 the first.
 
-You can inject dependencies into suits by setting the dependencies property on
-the suit.
+You can inject dependencies into suits by setting the dependencies property on it.
 
 ```javascript
 var isHungry = true;
 Suit.DI.set('fridge', { egg: 5, tomato: 2 });
 
-Person = function (isHungry, fridge) {
+Person = function (isHungry, fridge, age) {
     this.isHungry = isHungry;
     this.fridge = fridge;
+    this.age = age;
 
     this.eat = function () {
         if (this.isHungry) {
@@ -70,8 +70,10 @@ Person = function (isHungry, fridge) {
         }
     }
 };
-Person.dependencies = ['isHungry', '@fridge'];
+Person.dependencies = ['{isHungry}', '@fridge', 27];
 ```
 
-As you can see, the first dependency will be searched in the global namespace,
-and the second is a service which has been set into the DI container before.
+There are 3 types of dependencies:
+1. Global variable. The name of the global variable between curly braces.
+2. Service. The name of the service after a @. Should be registered in the Suit.DI container.
+3. Any other types of variable or literal.
