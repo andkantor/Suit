@@ -74,6 +74,7 @@ Person.dependencies = ['{isHungry}', '@fridge', 27];
 ```
 
 There are 3 types of dependencies:
+
 1. Global variable. The name of the global variable between curly braces.
 2. Service. The name of the service after a @. Should be registered in the Suit.DI container.
 3. Any other types of variable or literal.
