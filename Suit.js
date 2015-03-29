@@ -68,11 +68,18 @@
         },
         DI: {
             services: {},
+            params: {},
             get: function (id) {
                 return this.services[id];
             },
             set: function (id, service) {
                 this.services[id] = service;
+            },
+            getParam: function (name) {
+                return this.params[name];
+            },
+            setParam: function (name, value) {
+                this.params[name] = value;
             },
             lookUp: function (dependency) {
                 if (typeof dependency === 'string') {
@@ -80,6 +87,8 @@
                         return Suit.classify(dep);
                     } else if (dep = this.toService(dependency)) {
                         return this.get(dep);
+                    } else if (dep = this.toParam(dependency)) {
+                        return this.getParam(dep);
                     }
                 }
 
@@ -93,6 +102,11 @@
             toService: function (str) {
                 return str.indexOf('@') === 0
                     ? str.substring(1, str.length)
+                    : '';
+            },
+            toParam: function (str) {
+                return str.charAt(0) === '%' && str.charAt(str.length - 1) === '%'
+                    ? str.substring(1, str.length - 1)
                     : '';
             }
         }
