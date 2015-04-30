@@ -1,9 +1,26 @@
 Suit = (function (window, undefined) {
-    var index, key, dependencies, dep, func, parts, data,
+    var index, key, dependencies, dep, func, prototypeFunc, parts, data,
         document = window.document;
 
     var Core = {
         up: function (element, suits) {
+            element = element || document.querySelectorAll('[suit]');
+
+            if (element.constructor === String) {
+                element = document.querySelectorAll(element);
+            }
+            if (
+                element.constructor === NodeList
+                || element.constructor === Array
+            ) {
+                Tool.each(element, function (i, element) {
+                    Core.upOne(element, suits);
+                });
+            } else {
+                Core.upOne(element, suits);
+            }
+        },
+        upOne: function (element, suits) {
             suits = suits || element.getAttribute('suit').split(';');
 
             Core.initProp(element, element, window.Suit.propName);
@@ -23,7 +40,8 @@ Suit = (function (window, undefined) {
 
                 if (suitClass !== undefined) {
                     element.__Suits__.push(data.classString);
-                    Core.copy(Core.build(suitClass), data.to);
+                    dependencies = Core.getDependencies(suitClass);
+                    Core.copy(Core.create(element, suitClass, dependencies), data.to);
                 }
             });
         },
@@ -50,11 +68,6 @@ Suit = (function (window, undefined) {
                 }
             }
         },
-        refresh: function () {
-            Tool.each(document.querySelectorAll('[suit]'), function (i, element) {
-                Core.up(element);
-            });
-        },
         classify: function (classString, namespace) {
             namespace = namespace || window;
 
@@ -74,7 +87,7 @@ Suit = (function (window, undefined) {
                 }
             }
         },
-        build: function (suitClass) {
+        getDependencies: function (suitClass) {
             dependencies = [];
 
             if (suitClass.hasOwnProperty('dependencies')) {
@@ -83,11 +96,13 @@ Suit = (function (window, undefined) {
                 });
             }
 
-            return this.create(suitClass, dependencies);
+            return dependencies;
         },
-        create: function (suitClass, dependencies) {
+        create: function (element, suitClass, dependencies) {
             func = function () { suitClass.apply(this, dependencies); };
-            func.prototype = suitClass.prototype;
+            prototypeFunc = function () { this.Owner = element };
+            prototypeFunc.prototype = suitClass.prototype;
+            func.prototype = new prototypeFunc();
             return new func();
         }
     };
@@ -178,16 +193,13 @@ Suit = (function (window, undefined) {
     };
 
     Tool.bind(document, 'DOMContentLoaded', function () {
-        Core.refresh();
+        Core.up();
     });
 
     return {
         propName: 'St',
         up: function (element, suits) {
             Core.up(element, suits);
-        },
-        refresh: function () {
-            Core.refresh();
         },
         DI: {
             get: function (id) {
